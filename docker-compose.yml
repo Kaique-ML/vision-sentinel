@@ -1,0 +1,15 @@
+version: "3.9"
+
+services:
+  dashboard:
+    build: .
+    container_name: vision-sentinel-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data          # banco de dados persiste entre restarts
+      - ./models:/app/models      # modelos YOLO não precisam ser baixados de novo
+      - ./.env:/app/.env          # injeta suas variáveis de ambiente
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1

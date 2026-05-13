@@ -1,0 +1,31 @@
+# Ambiente virtual
+venv/
+.venv/
+env/
+
+# Variáveis sensíveis — NUNCA suba o .env!
+.env
+
+# Banco de dados gerado em runtime
+data/*.db
+data/*.sqlite
+
+# Modelos YOLO (grandes demais para o git)
+models/*.pt
+models/*.onnx
+
+# Saídas de vídeo
+*.mp4
+*.avi
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# IDEs
+.vscode/
+.idea/
+*.DS_Store
