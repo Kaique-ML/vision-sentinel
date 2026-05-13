@@ -2,6 +2,7 @@
 venv/
 .venv/
 env/
+docs/
 
 # Variáveis sensíveis — NUNCA suba o .env!
 .env
@@ -9,7 +10,7 @@ env/
 # Banco de dados gerado em runtime
 data/*.db
 data/*.sqlite
-
+GUIA_COMPLETO.md
 # Modelos YOLO (grandes demais para o git)
 models/*.pt
 models/*.onnx
