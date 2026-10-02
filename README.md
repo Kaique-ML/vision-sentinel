@@ -1,180 +1,91 @@
-# 🎯 VisionSentinel
+# VisionSentinel
 
-> Motor de visão computacional em tempo real — detecta, registra e analisa objetos em vídeo usando YOLOv8, SQLite e um dashboard interativo em Streamlit.
+VisionSentinel is a local computer-vision prototype that detects selected objects in video, records detections, and displays the recorded data in a Streamlit dashboard.
 
-![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)
-![YOLOv8](https://img.shields.io/badge/YOLOv8-Ultralytics-00FFAA?logo=yolo)
-![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-FF4B4B?logo=streamlit)
-![License](https://img.shields.io/badge/License-MIT-green)
-![CI](https://github.com/SEU_USUARIO/vision-sentinel/actions/workflows/ci.yml/badge.svg)
+## Problem and solution
 
----
+Video streams can contain activity that is difficult to review manually. This project demonstrates a simple pipeline from video capture to object detection, local persistence, and basic time-series analysis.
 
-## ✨ O que este projeto faz
+## Implemented features
 
-| Fase | Descrição |
-|------|-----------|
-| 📷 **Captura** | Webcam, arquivo de vídeo ou câmera IP (RTSP) |
-| 🤖 **Inferência** | YOLOv8 detecta pessoas, carros, caminhões e bicicletas |
-| 🗄️ **Persistência** | Cada detecção é gravada no SQLite com timestamp |
-| 📊 **Dashboard** | KPIs, gráficos de linha, heatmap e tabela ao vivo |
-| 🐳 **Deploy** | Dockerfile + Streamlit Cloud ready |
+- Read frames from a webcam, video file, or RTSP URL through OpenCV.
+- Run the pretrained YOLOv8 model and retain detections for the configured target classes and confidence threshold.
+- Record class, confidence, bounding-box coordinates, and timestamp in SQLite.
+- Display counts and charts from the database in a Streamlit dashboard, with date, class, and confidence filters.
+- Generate synthetic detection records for a dashboard-only demo.
+- Package the dashboard in Docker Compose and include database-focused pytest tests.
 
----
+The seed script creates synthetic records; those records are not outputs from the detector.
 
-## 🖼️ Screenshots
+## Architecture
 
-> *Adicione um GIF gravado com [ScreenToGif](https://www.screentogif.com/) mostrando o sistema rodando.*
+```mermaid
+flowchart LR
+    A[Webcam, video file, or RTSP] --> B[OpenCV frame capture]
+    B --> C[Pretrained YOLOv8 detector]
+    C --> D[Class and confidence filters]
+    D --> E[(SQLite detections)]
+    E --> F[Streamlit dashboard]
+    G[Synthetic seed data] --> E
+```
 
----
+The capture loop is in `main.py`; inference and persistence are separated into `src/detector.py` and `src/database.py`. `dashboard/app.py` reads the same SQLite database.
 
-## 🛠️ Tecnologias
+## Requirements and installation
 
-- **[Ultralytics YOLOv8](https://github.com/ultralytics/ultralytics)** — modelo de detecção de objetos
-- **OpenCV** — captura e anotação de frames
-- **SQLite** — banco de dados leve, zero configuração
-- **Streamlit + Plotly** — dashboard interativo
-- **Python-dotenv** — gestão de configuração via `.env`
-- **Docker** — empacotamento e portabilidade
-
----
-
-## 🚀 Instalação e execução
-
-### Pré-requisitos
-
-- Python 3.11+
-- Git
-- (Opcional) Docker Desktop
-
-### 1. Clonar o repositório
+Use Python 3.11 and pip:
 
 ```bash
-git clone https://github.com/SEU_USUARIO/vision-sentinel.git
+git clone https://github.com/Kaique-ML/vision-sentinel.git
 cd vision-sentinel
-```
+python -m venv .venv
 
-### 2. Criar o ambiente virtual
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
 
-```bash
-python -m venv venv
+# macOS/Linux
+# source .venv/bin/activate
 
-# Linux / macOS
-source venv/bin/activate
-
-# Windows
-venv\Scripts\activate
-```
-
-### 3. Instalar as dependências
-
-```bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Configurar o ambiente
+The YOLO weights may be downloaded by Ultralytics the first time the detector starts. A camera, video file, or reachable RTSP stream is needed to demonstrate live detection.
+
+## Run a dashboard demo
+
+This path needs no camera and gives the dashboard sample data to display:
 
 ```bash
-cp .env.example .env
-# Edite o .env conforme necessário
-```
-
-### 5. Gerar dados de demonstração
-
-```bash
-python seed_data.py
-```
-
-### 6. Subir o dashboard
-
-```bash
+python seed_data.py --days 7 --records 1000
 streamlit run dashboard/app.py
 ```
 
-Acesse: **http://localhost:8501**
+Open `http://localhost:8501`.
 
----
-
-### 7. Rodar o motor de detecção (opcional)
+To process a video source and save an annotated output:
 
 ```bash
-# Webcam
-python main.py --show
-
-# Arquivo de vídeo
-python main.py --source video.mp4 --show --save-video output.mp4
-
-# Câmera IP (RTSP)
-python main.py --source rtsp://usuario:senha@192.168.1.100:554/stream
+python main.py --source path/to/video.mp4 --save-video output.mp4
 ```
 
----
+For a webcam, use `--source 0`. The requirements currently use a headless OpenCV package, so the optional `--show` window requires a GUI-capable OpenCV installation.
 
-## 🐳 Docker (execução em um comando)
-
-```bash
-# Gerar dados simulados primeiro
-python seed_data.py
-
-# Build e execução
-docker compose up --build
-```
-
-Acesse: **http://localhost:8501**
-
----
-
-## 📁 Estrutura do projeto
-
-```
-vision-sentinel/
-├── main.py                  # Ponto de entrada do motor de detecção
-├── seed_data.py             # Gerador de dados simulados
-├── requirements.txt
-├── Dockerfile
-├── docker-compose.yml
-├── .env.example             # Template de variáveis de ambiente
-├── .gitignore
-│
-├── src/
-│   ├── detector.py          # Módulo de inferência YOLOv8
-│   ├── database.py          # Camada de persistência SQLite
-│   └── utils.py             # Logging, desenho de bounding boxes
-│
-├── dashboard/
-│   └── app.py               # Interface Streamlit (BI Dashboard)
-│
-├── tests/
-│   └── test_database.py     # Testes unitários
-│
-├── data/                    # Banco de dados (gerado em runtime, no .gitignore)
-├── models/                  # Pesos YOLO (baixados automaticamente)
-└── .github/
-    └── workflows/
-        └── ci.yml           # Pipeline de CI (GitHub Actions)
-```
-
----
-
-## ⚙️ Variáveis de ambiente
-
-| Variável | Padrão | Descrição |
-|----------|--------|-----------|
-| `MODEL_PATH` | `models/yolov8n.pt` | Caminho para o modelo YOLO |
-| `CONFIDENCE_THRESHOLD` | `0.45` | Confiança mínima de detecção |
-| `TARGET_CLASSES` | `person,car,truck,bicycle` | Classes monitoradas |
-| `DB_PATH` | `data/detections.db` | Caminho do banco SQLite |
-
----
-
-## 🧪 Testes
+## Tests
 
 ```bash
 pytest tests/ -v
 ```
 
----
+The current tests cover SQLite initialization and writes; they do not test detector accuracy, camera capture, or dashboard behavior.
 
-## 📜 Licença
+## Limitations and future work
 
-MIT © 2024 — Seu Nome
+**Current limitations**
+
+- The project uses pretrained YOLOv8 weights and a fixed set of target classes; it does not include a custom-trained model or model-quality evaluation.
+- SQLite and the dashboard are local/demo components. There is no user authentication, alert delivery, external API, or multi-user data service.
+- Seeded records are synthetic and must not be confused with camera-derived observations.
+- The repository does not currently include a `LICENSE` file, despite the license badge in the previous README.
+
+**Possible future work (not implemented):** add a recorded demo, test inference with representative footage, document resource requirements, and add authenticated alert or API integrations where needed.
